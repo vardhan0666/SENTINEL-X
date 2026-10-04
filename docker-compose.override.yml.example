@@ -1,0 +1,11 @@
+# Copy this file to docker-compose.override.yml to enable backend hot-reload
+# during local development. Docker Compose automatically merges any
+# docker-compose.override.yml with docker-compose.yml.
+
+version: "3.9"
+
+services:
+  backend:
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"

@@ -1,0 +1,41 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+*.sqlite3
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# --- Environment ---
+.env
+.env.*
+!.env.example
+
+# --- Docker ---
+*.pid
+
+# --- ML artifacts (trained models are generated locally, not versioned) ---
+ml/artifacts/*
+!ml/artifacts/.gitkeep
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
