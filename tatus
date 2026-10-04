@@ -1,0 +1,669 @@
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 6aaf551..688bb21 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1,154 +1,1250 @@[m
+ # SENTINEL-X[m
+ [m
+[31m-**Real-Time Cyber Threat Detection, Security Monitoring & Defensive Response Platform**[m
+[31m-[m
+[31m-> ⚠️ Defensive cybersecurity project. Operates only on synthetic telemetry,[m
+[31m-> sample logs, and simulated events in local/authorized lab environments.[m
+[31m-> No offensive, destructive, or unauthorized functionality is implemented.[m
+[31m-> See `docs/SECURITY.md` *(added in a later batch)*.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## What is SENTINEL-X?[m
+[31m-[m
+[31m-SENTINEL-X is a local, SOC-style security monitoring platform that ingests[m
+[31m-security telemetry (authentication logs, network connections, DNS activity,[m
+[31m-endpoint events, firewall events), normalizes it into a canonical schema,[m
+[31m-runs it through a rule-based detection engine and a statistical/ML anomaly[m
+[31m-engine, correlates related events into incidents, calculates transparent[m
+[31m-risk scores, and presents everything through an analyst-facing dashboard —[m
+[31m-with full explainability at every stage.[m
+[31m-[m
+[31m-This is **not** a hardcoded demo dashboard. Every alert, score, and incident[m
+[31m-shown by the platform is produced by actually processing ingested events.[m
+[31m-[m
+[31m-## Architecture (summary)[m
+[31m-[m
+[31m-Telemetry → Ingestion → Validation → Normalization → Enrichment[m
+[31m-→ Detection Engine (rules) + ML Anomaly Engine[m
+[31m-→ Correlation Engine → Risk Scoring → Explainability[m
+[31m-→ Incident Management → Defensive Response (simulated)[m
+[31m-→ Real-time Analyst Dashboard[m
+[31m-[m
+[31m-[m
+[31m-Full architectural detail lives in `docs/ARCHITECTURE.md` (added as the[m
+[31m-corresponding subsystems are implemented).[m
+[31m-[m
+[31m-## Technology Stack[m
+[31m-[m
+[31m-| Layer | Stack |[m
+[31m-|---|---|[m
+[31m-| Backend | Python 3.11, FastAPI, SQLAlchemy 2.0 (async), Alembic, PostgreSQL 15 |[m
+[31m-| ML | scikit-learn (Isolation Forest), NumPy, pandas |[m
+[31m-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Recharts |[m
+[31m-| Realtime | WebSockets |[m
+[31m-| Auth | JWT + bcrypt, role-based access control (ADMIN/ANALYST/VIEWER) |[m
+[31m-| Infra | Docker Compose |[m
+[31m-[m
+[31m-## Project Status[m
+[31m-[m
+[31m-This repository is being built incrementally in reviewed batches. Current[m
+[31m-status:[m
+[31m-[m
+[31m-- [x] **Batch 1** — Project scaffold, Docker Compose, backend core[m
+[31m-      (config, database, security, logging, WebSocket manager), Alembic[m
+[31m-      scaffold, minimal health-checked FastAPI app.[m
+[31m-- [x] **Batch 2** — Full relational schema: SQLAlchemy models for users,[m
+[31m-      assets, events, rules, detections, anomaly results, correlation[m
+[31m-      groups, incidents, indicators, response actions, and audit logs,[m
+[31m-      plus the initial Alembic migration.[m
+[31m-- [x] **Batch 3** — Pydantic schemas for every resource (request/response[m
+[31m-      contracts for the upcoming API).[m
+[31m-- [x] **Batch 4** — Authentication & RBAC: JWT login/refresh/me/logout,[m
+[31m-      role-enforcement dependency, seed script for demo accounts, audit[m
+[31m-      logging of login/logout events.[m
+[31m-- [ ] Ingestion & normalization engine[m
+[31m-- [ ] Detection engine (rules)[m
+[31m-- [ ] Correlation & risk scoring[m
+[31m-- [ ] ML anomaly engine[m
+[31m-- [ ] Incident management & response simulation[m
+[31m-- [ ] Analytics, health, WebSocket API[m
+[31m-- [ ] Telemetry simulator[m
+[31m-- [ ] Backend test suite[m
+[31m-- [ ] Frontend application[m
+[31m-- [ ] Full documentation set[m
+[31m-[m
+[31m-Do not expect endpoints beyond `/`, `/api/v1/health`, and `/api/v1/auth/*`[m
+[31m-to exist until the corresponding batch lands.[m
+[31m-[m
+[31m-## Quick Start (current batch)[m
+[31m-[m
+[31m-```bash[m
+[31m-# 1. Copy environment template[m
+[31m-cp .env.example .env[m
+[31m-# Edit .env and set a real SECRET_KEY, e.g.:[m
+[31m-#   openssl rand -hex 32[m
+[31m-[m
+[31m-# 2. Start the database and backend (frontend/simulator are not yet buildable)[m
+[31m-docker compose up --build postgres backend[m
+[31m-[m
+[31m-# 3. Verify the API is healthy[m
+[32m+[m[32m### Real-Time Cyber Threat Detection, Security Monitoring & Defensive Response Platform[m
+[32m+[m
+[32m+[m[32m> **SENTINEL-X is a defensive, SOC-style cybersecurity platform that transforms raw security telemetry into detections, risk intelligence, incidents, and real-time analyst visibility.**[m
+[32m+[m
+[32m+[m[32m**SENTINEL-X** is a full-stack Security Operations Center (SOC) platform designed to demonstrate how modern security monitoring systems process telemetry from ingestion to analyst response.[m
+[32m+[m
+[32m+[m[32mInstead of displaying hardcoded alerts, SENTINEL-X implements an actual security pipeline:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mTelemetry[m
+[32m+[m[32m   ↓[m
+[32m+[m[32mIngestion[m
+[32m+[m[32m   ↓[m
+[32m+[m[32mValidation & Normalization[m
+[32m+[m[32m   ↓[m
+[32m+[m[32mEnrichment[m
+[32m+[m[32m   ↓[m
+[32m+[m[32mRule-Based Detection ─────┐[m
+[32m+[m[32m                          ├──→ Correlation[m
+[32m+[m[32mML Anomaly Detection ────┘[m
+[32m+[m[32m                               ↓[m
+[32m+[m[32m                         Risk Scoring[m
+[32m+[m[32m                               ↓[m
+[32m+[m[32m                         Incident Creation[m
+[32m+[m[32m                               ↓[m
+[32m+[m[32m                    Defensive Response Simulation[m
+[32m+[m[32m                               ↓[m
+[32m+[m[32m                    Real-Time SOC Dashboard[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThe platform combines **cybersecurity engineering, backend development, machine learning, data processing, real-time systems, and security visualization** into one integrated project.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## 🛡️ What is SENTINEL-X?[m
+[32m+[m
+[32m+[m[32mSENTINEL-X is a local Security Operations Center (SOC) platform capable of receiving and processing multiple categories of security telemetry, including:[m
+[32m+[m
+[32m+[m[32m* Authentication activity[m
+[32m+[m[32m* Network connections[m
+[32m+[m[32m* DNS queries[m
+[32m+[m[32m* Endpoint/process activity[m
+[32m+[m[32m* Firewall events[m
+[32m+[m[32m* Simulated security incidents[m
+[32m+[m
+[32m+[m[32mThe platform processes these events through multiple security layers.[m
+[32m+[m
+[32m+[m[32m### Detection Pipeline[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mRaw Event[m
+[32m+[m[32m   │[m
+[32m+[m[32m   ▼[m
+[32m+[m[32mIngestion[m
+[32m+[m[32m   │[m
+[32m+[m[32m   ▼[m
+[32m+[m[32mValidation[m
+[32m+[m[32m   │[m
+[32m+[m[32m   ▼[m
+[32m+[m[32mNormalization[m
+[32m+[m[32m   │[m
+[32m+[m[32m   ▼[m
+[32m+[m[32mEnrichment[m
+[32m+[m[32m   │[m
+[32m+[m[32m   ├───────────────┐[m
+[32m+[m[32m   ▼               ▼[m
+[32m+[m[32mRule Engine      ML Engine[m
+[32m+[m[32m   │               │[m
+[32m+[m[32m   └───────┬───────┘[m
+[32m+[m[32m           ▼[m
+[32m+[m[32m      Correlation[m
+[32m+[m[32m           │[m
+[32m+[m[32m           ▼[m
+[32m+[m[32m      Risk Scoring[m
+[32m+[m[32m           │[m
+[32m+[m[32m           ▼[m
+[32m+[m[32m       Incident[m
+[32m+[m[32m           │[m
+[32m+[m[32m           ▼[m
+[32m+[m[32m Response Simulation[m
+[32m+[m[32m           │[m
+[32m+[m[32m           ▼[m
+[32m+[m[32m   Analyst Dashboard[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mEvery major alert, detection, incident, and risk score displayed by the dashboard originates from processed telemetry rather than static frontend data.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# ⚡ Why SENTINEL-X?[m
+[32m+[m
+[32m+[m[32mTraditional beginner cybersecurity projects often stop at:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mLog → Alert[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mSENTINEL-X goes further:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mLog[m
+[32m+[m[32m ↓[m
+[32m+[m[32mUnderstand the event[m
+[32m+[m[32m ↓[m
+[32m+[m[32mNormalize the data[m
+[32m+[m[32m ↓[m
+[32m+[m[32mDetect suspicious behavior[m
+[32m+[m[32m ↓[m
+[32m+[m[32mApply ML anomaly analysis[m
+[32m+[m[32m ↓[m
+[32m+[m[32mCorrelate related activity[m
+[32m+[m[32m ↓[m
+[32m+[m[32mCalculate risk[m
+[32m+[m[32m ↓[m
+[32m+[m[32mCreate an incident[m
+[32m+[m[32m ↓[m
+[32m+[m[32mExplain why it happened[m
+[32m+[m[32m ↓[m
+[32m+[m[32mAllow analyst investigation[m
+[32m+[m[32m ↓[m
+[32m+[m[32mSimulate defensive response[m
+[32m+[m[32m ↓[m
+[32m+[m[32mVisualize everything in real time[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThis makes SENTINEL-X a practical demonstration of how components found in modern **SIEM / SOC / XDR-style workflows** can be designed and integrated.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🚀 Key Capabilities[m
+[32m+[m
+[32m+[m[32m## 🔐 Authentication & RBAC[m
+[32m+[m
+[32m+[m[32m* JWT-based authentication[m
+[32m+[m[32m* Access and refresh tokens[m
+[32m+[m[32m* Role-based access control[m
+[32m+[m[32m* ADMIN / ANALYST / VIEWER roles[m
+[32m+[m[32m* Protected API endpoints[m
+[32m+[m[32m* WebSocket authentication[m
+[32m+[m[32m* Login/logout auditing[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## 📥 Security Telemetry Ingestion[m
+[32m+[m
+[32m+[m[32mSENTINEL-X accepts multiple telemetry categories:[m
+[32m+[m
+[32m+[m[32m| Category       | Examples                                  |[m
+[32m+[m[32m| -------------- | ----------------------------------------- |[m
+[32m+[m[32m| Authentication | Login failures, successful authentication |[m
+[32m+[m[32m| Network        | Connections, ports, connection failures   |[m
+[32m+[m[32m| DNS            | Queries, suspicious domains               |[m
+[32m+[m[32m| Endpoint       | Process execution and abnormal activity   |[m
+[32m+[m[32m| Firewall       | Network security events                   |[m
+[32m+[m
+[32m+[m[32mIncoming telemetry is validated and converted into a canonical internal representation before detection.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🧠 Detection Engine[m
+[32m+[m
+[32m+[m[32mSENTINEL-X contains an extensible rule-based detection engine.[m
+[32m+[m
+[32m+[m[32mCurrent detection rules include:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mAUTH_REPEATED_FAILURES[m
+[32m+[m[32mAUTH_BRUTE_FORCE[m
+[32m+[m[32mAUTH_SUCCESS_AFTER_FAILURES[m
+[32m+[m
+[32m+[m[32mNET_HIGH_CONNECTION_FREQUENCY[m
+[32m+[m[32mNET_SUSPICIOUS_PORT[m
+[32m+[m[32mNET_REPEATED_CONN_FAILURES[m
+[32m+[m
+[32m+[m[32mENDPOINT_SUSPICIOUS_PROCESS[m
+[32m+[m[32mENDPOINT_ABNORMAL_EXEC_RATE[m
+[32m+[m
+[32m+[m[32mFILE_UNUSUAL_ACTIVITY[m
+[32m+[m
+[32m+[m[32mDNS_EXCESSIVE_QUERIES[m
+[32m+[m[32mDNS_SUSPICIOUS_DOMAIN_PATTERN[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThe detection engine evaluates incoming events and produces structured detections containing information such as:[m
+[32m+[m
+[32m+[m[32m* Detection type[m
+[32m+[m[32m* Severity[m
+[32m+[m[32m* Confidence[m
+[32m+[m[32m* Source information[m
+[32m+[m[32m* Related event[m
+[32m+[m[32m* Detection rule[m
+[32m+[m[32m* Explanation[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🤖 ML Anomaly Detection[m
+[32m+[m
+[32m+[m[32mSENTINEL-X also contains a machine-learning anomaly detection layer.[m
+[32m+[m
+[32m+[m[32m### Model[m
+[32m+[m
+[32m+[m[32m**Isolation Forest**[m
+[32m+[m
+[32m+[m[32mThe ML pipeline extracts numerical features from telemetry and evaluates whether observed behavior deviates from the learned baseline.[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mTelemetry[m
+[32m+[m[32m    ↓[m
+[32m+[m[32mFeature Extraction[m
+[32m+[m[32m    ↓[m
+[32m+[m[32mBaseline Analysis[m
+[32m+[m[32m    ↓[m
+[32m+[m[32mIsolation Forest[m
+[32m+[m[32m    ↓[m
+[32m+[m[32mAnomaly Score[m
+[32m+[m[32m    ↓[m
+[32m+[m[32mRisk / Detection Pipeline[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThe ML subsystem is intentionally explainable and integrated into the broader detection pipeline rather than functioning as an isolated model demonstration.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🔗 Event Correlation[m
+[32m+[m
+[32m+[m[32mIndividual events do not always represent an attack by themselves.[m
+[32m+[m
+[32m+[m[32mSENTINEL-X correlates related detections and events to identify broader security activity.[m
+[32m+[m
+[32m+[m[32mFor example:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mMultiple Login Failures[m
+[32m+[m[32m        ↓[m
+[32m+[m[32mSuccessful Login[m
+[32m+[m[32m        ↓[m
+[32m+[m[32mSuspicious Network Activity[m
+[32m+[m[32m        ↓[m
+[32m+[m[32mEndpoint Activity[m
+[32m+[m[32m        ↓[m
+[32m+[m[32mCorrelated Security Incident[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThis allows analysts to investigate activity as an incident rather than viewing thousands of unrelated alerts.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🎯 Risk Scoring[m
+[32m+[m
+[32m+[m[32mSENTINEL-X calculates transparent risk scores using security factors such as:[m
+[32m+[m
+[32m+[m[32m* Detection severity[m
+[32m+[m[32m* Event characteristics[m
+[32m+[m[32m* Threat indicators[m
+[32m+[m[32m* Correlation context[m
+[32m+[m[32m* Anomaly information[m
+[32m+[m[32m* Asset importance[m
+[32m+[m
+[32m+[m[32mThe goal is not simply to say:[m
+[32m+[m
+[32m+[m[32m> "Something is suspicious."[m
+[32m+[m
+[32m+[m[32mThe platform attempts to answer:[m
+[32m+[m
+[32m+[m[32m> **"How serious is this activity, and why?"**[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🚨 Incident Management[m
+[32m+[m
+[32m+[m[32mDetections can be associated with incidents.[m
+[32m+[m
+[32m+[m[32mSupported incident states include:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mNEW[m
+[32m+[m[32mINVESTIGATING[m
+[32m+[m[32mCONTAINED[m
+[32m+[m[32mRESOLVED[m
+[32m+[m[32mFALSE_POSITIVE[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mAnalysts can investigate incidents, inspect associated detections/events, evaluate risk, update status, and trigger simulated response actions.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🛠️ Defensive Response Simulation[m
+[32m+[m
+[32m+[m[32mSENTINEL-X includes simulation-only response actions such as:[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mINVESTIGATE_SOURCE_IP[m
+[32m+[m[32mREVIEW_AUTH_LOGS[m
+[32m+[m[32mISOLATE_ENDPOINT[m
+[32m+[m[32mDISABLE_ACCOUNT[m
+[32m+[m[32mROTATE_CREDENTIALS[m
+[32m+[m[32mBLOCK_INDICATOR[m
+[32m+[m[32mINCREASE_MONITORING[m
+[32m+[m[32mCOLLECT_TELEMETRY[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThese actions **do not perform real destructive or offensive operations**.[m
+[32m+[m
+[32m+[m[32mThey represent what a SOC response workflow could look like in an authorized training environment.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🌐 Real-Time Monitoring[m
+[32m+[m
+[32m+[m[32mThe platform uses **WebSockets** for real-time security event delivery.[m
+[32m+[m
+[32m+[m[32mThe Live Events interface receives newly processed events without requiring a full page refresh.[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mEvent Generated[m
+[32m+[m[32m      ↓[m
+[32m+[m[32mBackend Pipeline[m
+[32m+[m[32m      ↓[m
+[32m+[m[32mDetection / Processing[m
+[32m+[m[32m      ↓[m
+[32m+[m[32mWebSocket Manager[m
+[32m+[m[32m      ↓[m
+[32m+[m[32mConnected Analysts[m
+[32m+[m[32m      ↓[m
+[32m+[m[32mLive SOC Dashboard[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mThe dashboard displays the realtime connection state and incoming telemetry.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 📊 SOC Dashboard[m
+[32m+[m
+[32m+[m[32mThe frontend provides multiple analyst-focused modules.[m
+[32m+[m
+[32m+[m[32m### Overview[m
+[32m+[m
+[32m+[m[32mProvides a high-level security posture including:[m
+[32m+[m
+[32m+[m[32m* Total events[m
+[32m+[m[32m* Detection activity[m
+[32m+[m[32m* Incident activity[m
+[32m+[m[32m* Risk information[m
+[32m+[m[32m* Threat posture[m
+[32m+[m[32m* Realtime security activity[m
+[32m+[m
+[32m+[m[32m### Live Events[m
+[32m+[m
+[32m+[m[32mReal-time telemetry monitoring using WebSockets.[m
+[32m+[m
+[32m+[m[32m### Event Explorer[m
+[32m+[m
+[32m+[m[32mSecurity event investigation with filtering and pagination.[m
+[32m+[m
+[32m+[m[32m### Alerts[m
+[32m+[m
+[32m+[m[32mDetection and alert visibility.[m
+[32m+[m
+[32m+[m[32m### Incidents[m
+[32m+[m
+[32m+[m[32mIncident investigation and response workflow.[m
+[32m+[m
+[32m+[m[32m### Incident Detail[m
+[32m+[m
+[32m+[m[32mDetailed incident investigation including:[m
+[32m+[m
+[32m+[m[32m* Incident metadata[m
+[32m+[m[32m* Risk[m
+[32m+[m[32m* Detections[m
+[32m+[m[32m* Related events[m
+[32m+[m[32m* Response actions[m
+[32m+[m[32m* Investigation controls[m
+[32m+[m
+[32m+[m[32m### Analytics[m
+[32m+[m
+[32m+[m[32mSecurity analytics including:[m
+[32m+[m
+[32m+[m[32m* Events over time[m
+[32m+[m[32m* Severity distribution[m
+[32m+[m[32m* Top sources[m
+[32m+[m[32m* Detection types[m
+[32m+[m
+[32m+[m[32m### Threat Intelligence[m
+[32m+[m
+[32m+[m[32mIndicator management for:[m
+[32m+[m
+[32m+[m[32m* IP addresses[m
+[32m+[m[32m* Domains[m
+[32m+[m[32m* Hashes[m
+[32m+[m[32m* URLs[m
+[32m+[m
+[32m+[m[32m### System Health[m
+[32m+[m
+[32m+[m[32mMonitoring of:[m
+[32m+[m
+[32m+[m[32m* Backend status[m
+[32m+[m[32m* Database connectivity[m
+[32m+[m[32m* Ingestion pipeline[m
+[32m+[m[32m* Detection pipeline[m
+[32m+[m[32m* ML subsystem[m
+[32m+[m[32m* Realtime services[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🖥️ SENTINEL-X Hacker Edition[m
+[32m+[m
+[32m+[m[32mThe interface is designed as a tactical SOC/HUD rather than a conventional admin dashboard.[m
+[32m+[m
+[32m+[m[32mVisual features include:[m
+[32m+[m
+[32m+[m[32m* Obsidian + Emerald + White visual system[m
+[32m+[m[32m* Tactical HUD components[m
+[32m+[m[32m* 3D threat visualization[m
+[32m+[m[32m* Interactive global threat globe[m
+[32m+[m[32m* Network connection visualization[m
+[32m+[m[32m* Realtime telemetry indicators[m
+[32m+[m[32m* Tactical sidebar[m
+[32m+[m[32m* Security operation status[m
+[32m+[m[32m* Global tactical cursor[m
+[32m+[m[32m* Realtime WebSocket status[m
+[32m+[m[32m* Analyst session indicators[m
+[32m+[m[32m* Animated security interface elements[m
+[32m+[m
+[32m+[m[32mThe visual layer is intentionally designed to make the project feel like an operational security console while keeping the underlying system functional.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🧱 Technology Stack[m
+[32m+[m
+[32m+[m[32m| Layer                | Technology              |[m
+[32m+[m[32m| -------------------- | ----------------------- |[m
+[32m+[m[32m| Frontend             | React 18                |[m
+[32m+[m[32m| Language             | TypeScript              |[m
+[32m+[m[32m| Build Tool           | Vite                    |[m
+[32m+[m[32m| Styling              | Tailwind CSS            |[m
+[32m+[m[32m| Visualization        | Recharts                |[m
+[32m+[m[32m| 3D Visualization     | Three.js                |[m
+[32m+[m[32m| Backend              | Python 3.11             |[m
+[32m+[m[32m| API                  | FastAPI                 |[m
+[32m+[m[32m| ORM                  | SQLAlchemy 2.0 Async    |[m
+[32m+[m[32m| Database             | PostgreSQL 15           |[m
+[32m+[m[32m| Migrations           | Alembic                 |[m
+[32m+[m[32m| Authentication       | JWT + bcrypt            |[m
+[32m+[m[32m| Realtime             | WebSockets              |[m
+[32m+[m[32m| Machine Learning     | scikit-learn            |[m
+[32m+[m[32m| ML Algorithm         | Isolation Forest        |[m
+[32m+[m[32m| Numerical Processing | NumPy / pandas          |[m
+[32m+[m[32m| Testing              | Pytest                  |[m
+[32m+[m[32m| Infrastructure       | Docker / Docker Compose |[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 🏗️ Architecture[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │   Security Sources   │[m
+[32m+[m[32m                         │ Auth / DNS / Network │[m
+[32m+[m[32m                         │ Endpoint / Firewall │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │      Ingestion       │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │ Validation /         │[m
+[32m+[m[32m                         │ Normalization        │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │      Enrichment      │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                    ┌───────────────┴───────────────┐[m
+[32m+[m[32m                    ▼                               ▼[m
+[32m+[m[32m          ┌──────────────────┐             ┌──────────────────┐[m
+[32m+[m[32m          │ Detection Engine │             │   ML Anomaly     │[m
+[32m+[m[32m          │   Rule Based     │             │     Engine       │[m
+[32m+[m[32m          └────────┬─────────┘             └────────┬─────────┘[m
+[32m+[m[32m                   │                                │[m
+[32m+[m[32m                   └───────────────┬────────────────┘[m
+[32m+[m[32m                                   ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │ Correlation Engine   │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │    Risk Scoring      │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │ Incident Management  │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │ Defensive Response   │[m
+[32m+[m[32m                         │     Simulation       │[m
+[32m+[m[32m                         └──────────┬───────────┘[m
+[32m+[m[32m                                    │[m
+[32m+[m[32m                                    ▼[m
+[32m+[m[32m                         ┌──────────────────────┐[m
+[32m+[m[32m                         │   Analyst Dashboard  │[m
+[32m+[m[32m                         │ React + WebSocket    │[m
+[32m+[m[32m                         └──────────────────────┘[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m# 📁 Project Structure[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mSENTINEL-X/[m
+[32m+[m[32m│[m
+[32m+[m[32m├── backend/[m
+[32m+[m[32m│   ├── app/[m
+[32m+[m[32m│   │   ├── api/[m
+[32m+[m[32m│   │   ├── core/[m
+[32m+[m[32m│   │   ├── correlation/[m
+[32m+[m[32m│   │   ├── detection/[m
+[32m+[m[32m│   │   ├── ingestion/[m
+[32m+[m[32m│   │   ├── ml/[m
+[32m+[m[32m│   │   ├── models/[m
+[32m+[m[32m│   │   ├── risk/[m
+[32m+[m[32m│   │   ├── schemas/[m
+[32m+[m[32m│   │   └── services/[m
+[32m+[m[32m│   │[m
+[32m+[m[32m│   ├── alembic/[m
+[32m+[m[32m│   ├── tests/[m
+[32m+[m[32m│   ├── Dockerfile[m
+[32m+[m[32m│   └── requirements.txt[m
+[32m+[m[32m│[m
+[32m+[m[32m├── database/[m
+[32m+[m[32m│   └── seed/[m
+[32m+[m[32m│       ├── seed_assets.py[m
+[32m+[m[32m│       ├── seed_indicators.py[m
+[32m+[m[32m│       ├── seed_rules.py[m
+[32m+[m[32m│       └── seed_users.py[m
+[32m+[m[32m│[m
+[32m+[m[32m├── frontend/[m
+[32m+[m[32m│   ├── src/[m
+[32m+[m[32m│   │   ├── components/[m
+[32m+[m[32m│   │   ├── context/[m
+[32m+[m[32m│   │   ├── hooks/[m
+[32m+[m[32m│   │   ├── pages/[m
+[32m+[m[32m│   │   ├── services/[m
+[32m+[m[32m│   │   ├── tests/[m
+[32m+[m[32m│   │   └── types/[m
+[32m+[m[32m│   ├── Dockerfile[m
+[32m+[m[32m│   └── package.json[m
+[32m+[m[32m│[m
+[32m+[m[32m├── simulator/[m
+[32m+[m[32m│   ├── scenarios/[m
+[32m+[m[32m│   ├── client.py[m
+[32m+[m[32m│   └── simulator.py[m
+[32m+[m[32m│[m
+[32m+[m[32m├── scripts/[m
+[32m+[m[32m│   ├── reset_db.sh[m
+[32m+[m[32m│   ├── run_migrations.sh[m
+[32m+[m[32m│   ├── run_simulator.sh[m
+[32m+[m[32m│   ├── run_tests.sh[m
+[32m+[m[32m│   └── start.sh[m
+[32m+[m[32m│[m
+[32m+[m[32m├── docs/[m
+[32m+[m[32m│   ├── API.md[m
+[32m+[m[32m│   ├── ARCHITECTURE.md[m
+[32m+[m[32m│   ├── DEPLOYMENT.md[m
+[32m+[m[32m│   �
